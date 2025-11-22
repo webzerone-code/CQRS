@@ -134,7 +134,25 @@ services:
       - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
     networks:
-      - cqrs    
+      - cqrs
+
+  # -----------------------------
+  # SPRING BOOT + FREEMARKER SERVICE
+  # -----------------------------
+  spring_app:
+    build:
+      context: ./spring_app
+      dockerfile: Dockerfile
+    container_name: spring_app
+    volumes:
+      - ./spring_app:/app
+      - ./spring_app/src/main/resources/templates:/app/src/main/resources/templates
+    ports:
+      - "8080:8080"
+    networks:
+      - cqrs
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
 
 networks:
   cqrs:
