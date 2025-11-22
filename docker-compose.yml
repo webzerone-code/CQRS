@@ -1,0 +1,143 @@
+version: "3.9"
+
+services:
+
+  # -----------------------------
+  # WRITE SERVICE (Laravel CQRS Write)
+  # -----------------------------
+  write_service:
+    build:
+      context: ./write_service
+      dockerfile: Dockerfile
+    container_name: cqrs_write
+    volumes:
+      - ./write_service:/var/www/html
+    networks:
+      - cqrs
+    depends_on:
+      - mysql
+      - kafka
+
+  write_nginx:
+    image: nginx:1.25
+    container_name: cqrs_write_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./write_service:/var/www/html
+      - ./write_service/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - write_service
+    networks:
+      - cqrs
+
+  # -----------------------------
+  # READ SERVICE (Laravel CQRS Read)
+  # -----------------------------
+  read_service:
+    build:
+      context: ./read_service
+      dockerfile: Dockerfile
+    container_name: cqrs_read
+    volumes:
+      - ./read_service:/var/www/html
+    networks:
+      - cqrs
+    depends_on:
+      - kafka
+
+  read_nginx:
+    image: nginx:1.25
+    container_name: cqrs_read_nginx
+    ports:
+      - "8001:80"
+    volumes:
+      - ./read_service:/var/www/html
+      - ./read_service/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - read_service
+    networks:
+      - cqrs
+
+  # -----------------------------
+  # KAFKA (Message Broker)
+  # -----------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: cqrs_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+    networks:
+      - cqrs
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: cqrs_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"  # internal Docker network access
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - cqrs
+
+  # -----------------------------
+  # Optional: Kafka Web UI (Kafdrop)
+  # -----------------------------
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9092
+    ports:
+      - "9002:9000"
+    networks:
+      - cqrs
+
+  # -----------------------------
+  # MYSQL (Write DB)
+  # -----------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: cqrs_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cqrs
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - cqrs
+
+  # -----------------------------
+  # REDIS (Cache Layer)
+  # -----------------------------
+  redis:
+    image: redis:alpine
+    container_name: cqrs_redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - cqrs    
+
+networks:
+  cqrs:
+
+volumes:
+  mysql_data:

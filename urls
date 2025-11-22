@@ -1,0 +1,6 @@
+Write API:  http://localhost:8000
+Read API:   http://localhost:8001
+Kafka:      localhost:9092
+MySQL:      localhost:3307
+Redis:      localhost:6379
+Kafdrop UI: http://localhost:9002

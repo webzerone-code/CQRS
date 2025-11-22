@@ -1,0 +1,51 @@
+/write_service/vendor/
+/read_service/vendor/
+
+/write_service/node_modules/
+/read_service/node_modules/
+
+# Laravel env files
+/write_service/.env
+/read_service/.env
+
+# Laravel storage and cache
+/write_service/storage/
+/write_service/bootstrap/cache/
+/read_service/storage/
+/read_service/bootstrap/cache/
+
+# Laravel IDE helper
+/write_service/_ide_helper.php
+/read_service/_ide_helper.php
+
+# ========================
+# Docker
+# ========================
+/**/docker-compose.override.yml
+**/.env.docker
+**/docker/.env
+
+# Optional: Docker volumes
+**/mysql_data
+**/redis_data
+
+# ========================
+# Logs and system files
+# ========================
+*.log
+*.cache
+*.tmp
+*.swp
+*.DS_Store
+*.idea/
+*.vscode/
+
+# Composer
+**/composer.lock
+
+# Node/NPM
+**/package-lock.json
+**/yarn.lock
+
+# Kafka UI / misc
+**/kafdrop/data/
