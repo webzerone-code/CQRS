@@ -99,7 +99,8 @@ services:
     depends_on:
       - kafka
     environment:
-      KAFKA_BROKERCONNECT: kafka:9092
+      KAFKA_BROKERCONNECT: kafka:29092
+      JVM_OPTS: "-Djava.awt.headless=true"
     ports:
       - "9002:9000"
     networks:
